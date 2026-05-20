@@ -49,8 +49,16 @@ foreach (($data['events'] ?? []) as $event) {
     // 友だち追加時のあいさつ
     if ($type === 'follow') {
         $reply = $event['replyToken'] ?? '';
+
+        // 友だち追加をログに記録
+        file_put_contents(
+            __DIR__ . '/users.log',
+            sprintf("[%s] WEBHOOK_FOLLOW %s\n", date('c'), $sourceUserId),
+            FILE_APPEND | LOCK_EX
+        );
+
         if ($reply !== '') {
-            line_reply($reply, [line_text('友だち追加ありがとうございます！')]);
+            line_reply($reply, [line_text("友だち追加ありがとうございます！\n下のメニュー「アプリを開く」からご利用いただけます。")]);
         }
     }
 }

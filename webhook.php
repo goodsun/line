@@ -22,11 +22,20 @@ if (!hash_equals($expected, $signature)) {
 $data = json_decode($raw, true);
 foreach (($data['events'] ?? []) as $event) {
     $type = $event['type'] ?? '';
+    $sourceUserId = $event['source']['userId'] ?? '-';
 
     // テキストメッセージへの応答
     if ($type === 'message' && (($event['message']['type'] ?? '') === 'text')) {
         $reply = $event['replyToken'] ?? '';
         $text = $event['message']['text'] ?? '';
+
+        // 受信メッセージをログに残す
+        file_put_contents(
+            __DIR__ . '/users.log',
+            sprintf("[%s] WEBHOOK_MESSAGE %s | %s\n", date('c'), $sourceUserId, $text),
+            FILE_APPEND | LOCK_EX
+        );
+
         if ($reply !== '') {
             if ($text === 'お問い合わせ') {
                 // リッチメニュー左半分からの導線

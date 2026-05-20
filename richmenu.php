@@ -23,20 +23,32 @@ if ($liffId === '') {
     exit(1);
 }
 
-// 1. リッチメニューを作成（全面タップでミニアプリを開く）
+// 1. リッチメニューを作成（左半分=お問い合わせ / 右半分=アプリを開く）
 $richMenu = [
     'size'        => ['width' => 2500, 'height' => 843],
     'selected'    => true,
     'name'        => 'main-menu',
     'chatBarText' => 'メニュー',
-    'areas'       => [[
-        'bounds' => ['x' => 0, 'y' => 0, 'width' => 2500, 'height' => 843],
-        'action' => [
-            'type'  => 'uri',
-            'label' => 'アプリを開く',
-            'uri'   => 'https://miniapp.line.me/' . $liffId,
+    'areas'       => [
+        [
+            // 左半分: お問い合わせ（メッセージ送信 → webhook.phpが応答）
+            'bounds' => ['x' => 0, 'y' => 0, 'width' => 1250, 'height' => 843],
+            'action' => [
+                'type'  => 'message',
+                'label' => 'お問い合わせ',
+                'text'  => 'お問い合わせ',
+            ],
         ],
-    ]],
+        [
+            // 右半分: アプリを開く（ミニアプリを起動）
+            'bounds' => ['x' => 1250, 'y' => 0, 'width' => 1250, 'height' => 843],
+            'action' => [
+                'type'  => 'uri',
+                'label' => 'アプリを開く',
+                'uri'   => 'https://miniapp.line.me/' . $liffId,
+            ],
+        ],
+    ],
 ];
 
 $created = line_create_richmenu($richMenu);

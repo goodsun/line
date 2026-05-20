@@ -23,12 +23,17 @@ $data = json_decode($raw, true);
 foreach (($data['events'] ?? []) as $event) {
     $type = $event['type'] ?? '';
 
-    // テキストメッセージにはオウム返しで応答
+    // テキストメッセージへの応答
     if ($type === 'message' && (($event['message']['type'] ?? '') === 'text')) {
         $reply = $event['replyToken'] ?? '';
         $text = $event['message']['text'] ?? '';
         if ($reply !== '') {
-            line_reply($reply, [line_text('「' . $text . '」を受け取りました')]);
+            if ($text === 'お問い合わせ') {
+                // リッチメニュー左半分からの導線
+                line_reply($reply, [line_text("お問い合わせありがとうございます。\nご用件をこのトークに送信してください。担当者が確認します。")]);
+            } else {
+                line_reply($reply, [line_text('「' . $text . '」を受け取りました')]);
+            }
         }
     }
 

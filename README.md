@@ -17,6 +17,7 @@ line/
 ├── broadcast.php   # 友だち全員に一斉配信するCLI
 ├── richmenu.php    # リッチメニュー作成・画像アップロード・デフォルト設定するCLI
 ├── privacy.php     # プライバシーポリシー（メール権限申請のスクショ用）
+├── img/menu.jpg    # 仮リッチメニュー画像（2500x843）
 ├── env.php         # .env ローダー
 ├── .env            # 設定（gitignore対象）
 ├── .env.example    # .env のテンプレ
@@ -278,8 +279,9 @@ php broadcast.php "全員へのお知らせです"
 画像は **2500x843**（compactサイズ）に合わせて用意する。
 
 ```bash
-php richmenu.php ./menu.png
+php richmenu.php img/menu.jpg
 # → richMenuId作成 → 画像アップロード → 全ユーザーのデフォルトに設定
+# 同梱の img/menu.jpg は仮メニュー画像（2500x843）。左=お問い合わせ / 右=アプリを開く
 ```
 
 ## LIFFとLINEミニアプリの関係

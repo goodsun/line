@@ -58,7 +58,12 @@ foreach (($data['events'] ?? []) as $event) {
         );
 
         if ($reply !== '') {
-            line_reply($reply, [line_text("友だち追加ありがとうございます！\n下のメニュー「アプリを開く」からご利用いただけます。")]);
+            // 表示名を取得して呼びかける（取得できなければ名前なしで送る）
+            $prof = line_get_profile($sourceUserId);
+            $name = $prof['ok'] ? ($prof['profile']['displayName'] ?? '') : '';
+            $greeting = ($name !== '' ? $name . 'さん、' : '')
+                . "友だち追加ありがとうございます！\n下のメニュー「アプリを開く」からご利用いただけます。";
+            line_reply($reply, [line_text($greeting)]);
         }
     }
 }

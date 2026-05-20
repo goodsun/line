@@ -43,6 +43,32 @@ function line_text(string $text): array
     return ['type' => 'text', 'text' => $text];
 }
 
+// ユーザープロフィール（displayName/pictureUrl等）を取得。友だちであることが前提。
+function line_get_profile(string $userId): array
+{
+    $bearer = line_bearer();
+    if ($bearer === '') {
+        return ['ok' => false, 'status' => 0, 'profile' => null, 'error' => 'LINE_CHANNEL_ACCESS_TOKEN not configured'];
+    }
+    $ch = curl_init('https://api.line.me/v2/bot/profile/' . rawurlencode($userId));
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $bearer],
+        CURLOPT_TIMEOUT => 10,
+    ]);
+    $body = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $err = curl_error($ch);
+    curl_close($ch);
+    $data = json_decode($body, true);
+    return [
+        'ok'      => $status >= 200 && $status < 300,
+        'status'  => $status,
+        'profile' => is_array($data) ? $data : null,
+        'error'   => $err,
+    ];
+}
+
 // 指定ユーザーにプッシュ送信。
 function line_push(string $to, array $messages): array
 {

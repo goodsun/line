@@ -6,9 +6,12 @@ LINEミニアプリ（LIFF）でログイン中のユーザーの `userId` を�
 
 ```
 line/
-├── index.php     # LIFF初期化 → userId取得 → 画面表示 + サーバーへPOST
-├── receive.php   # POSTされたuserIdを受け取り、users.log に追記
-├── users.log     # 受信ログ（実行時に自動生成）
+├── index.php       # LIFF初期化 → userId取得 → 画面表示 + サーバーへPOST
+├── receive.php     # POSTされたuserIdを受け取り、users.log に追記
+├── env.php         # .env ローダー
+├── .env            # LIFF_ID等の設定（gitignore対象）
+├── .env.example    # .env のテンプレ
+├── users.log       # 受信ログ（実行時に自動生成）
 └── README.md
 ```
 
@@ -53,9 +56,9 @@ LIFFはHTTPS必須。ローカル開発ならトンネルツールを使う。
 **例: PHPビルトインサーバ + cloudflared**
 
 ```bash
-# ターミナル1: PHPサーバー起動
+# ターミナル1: PHPサーバー起動（.env から LIFF_ID を読む）
 cd /Users/goodsun/develop/line
-LIFF_ID=1234567890-AbCdEfGh php -S localhost:8000
+php -S localhost:8000
 
 # ターミナル2: HTTPSトンネル
 cloudflared tunnel --url http://localhost:8000
@@ -65,21 +68,22 @@ cloudflared tunnel --url http://localhost:8000
 
 代替案: `ngrok http 8000` でも可。
 
-### 4. LIFF ID を反映
+### 4. LIFF ID を反映（.env）
 
-以下のいずれかでLIFF IDをセットする:
-
-**(a) 環境変数で渡す（推奨）**
+`.env.example` をコピーして `.env` を作成し、発行された LIFF ID を記入する:
 
 ```bash
-LIFF_ID=1234567890-AbCdEfGh php -S localhost:8000
+cp .env.example .env
 ```
 
-**(b) `index.php` を直接書き換え**
-
-```php
-$LIFF_ID = getenv('LIFF_ID') ?: '1234567890-AbCdEfGh'; // ←ここ
 ```
+# .env
+LIFF_ID=1234567890-AbCdEfGh
+```
+
+`index.php` 起動時に `env.php` が `.env` を読み込み、`getenv('LIFF_ID')` で取得する。
+
+**注意**: `.env` は `.gitignore` でコミット対象外。シェル環境変数が既にセットされている場合は `.env` の値は上書きされない。
 
 ## 動作確認
 

@@ -1,6 +1,12 @@
 <?php
-// LIFF ID は LINE Developers Console で発行したものに差し替える
-$LIFF_ID = getenv('LIFF_ID') ?: 'YOUR_LIFF_ID';
+require __DIR__ . '/env.php';
+
+$LIFF_ID = getenv('LIFF_ID') ?: '';
+if ($LIFF_ID === '') {
+    http_response_code(500);
+    echo 'LIFF_ID is not configured. Set it in .env';
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="ja">

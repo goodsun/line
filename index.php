@@ -81,6 +81,8 @@ if ($LIFF_ID === '') {
       <div class="label">email</div>
       <div class="value" id="email">-</div>
     </div>
+    <button id="pushBtn" class="btn">自分にプッシュ送信</button>
+    <div class="value" id="pushResult"></div>
     <button id="logoutBtn" class="btn btn-sub">ログアウト</button>
   </section>
 
@@ -144,6 +146,23 @@ if ($LIFF_ID === '') {
           img.classList.remove('hidden');
         }
         $('email').textContent = data.email || 'emailスコープ未許可';
+
+        // プッシュ送信ボタン（送信先は server 側で検証済みトークンから決定）
+        $('pushBtn').addEventListener('click', async () => {
+          $('pushResult').textContent = '送信中...';
+          try {
+            const r = await fetch('push.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ jwt })
+            });
+            const d = await r.json();
+            $('pushResult').textContent =
+              d.status === 'ok' ? '送信しました（トークを確認）' : '送信失敗: ' + (d.error || '');
+          } catch (err) {
+            $('pushResult').textContent = '送信失敗: ' + err.message;
+          }
+        });
       } catch (e) {
         const el = $('userId');
         el.textContent = 'エラー: ' + e.message;

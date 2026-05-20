@@ -1,0 +1,3 @@
+# False positives for the global secret-scan pre-push hook (literal substring match).
+# Config key name only, with empty value. Real secrets live in the gitignored .env.
+LINE_CHANNEL_ACCESS_TOKEN=

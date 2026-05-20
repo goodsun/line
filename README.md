@@ -8,11 +8,17 @@ LINE上で動作するミニアプリでログイン中のユーザーの `userI
 
 ```
 line/
-├── index.php       # 同意画面 → ログイン → IDトークン検証 → 結果表示
+├── index.php       # 同意画面 → ログイン → IDトークン検証 → 結果表示 + プッシュ送信ボタン
 ├── receive.php     # IDトークンをLINE verify APIで検証 → userId/email取得 → users.log に追記
+├── verify.php      # IDトークン検証の共通処理（receive.php / push.php で共用）
+├── line_api.php    # Messaging API クライアント（push/broadcast/reply/richmenu）
+├── push.php        # 検証済みuserId宛にプッシュ送信
+├── webhook.php     # Webhook受信（署名検証 + 自動応答ボット）
+├── broadcast.php   # 友だち全員に一斉配信するCLI
+├── richmenu.php    # リッチメニュー作成・画像アップロード・デフォルト設定するCLI
 ├── privacy.php     # プライバシーポリシー（メール権限申請のスクショ用）
 ├── env.php         # .env ローダー
-├── .env            # LIFF_ID等の設定（gitignore対象）
+├── .env            # 設定（gitignore対象）
 ├── .env.example    # .env のテンプレ
 ├── users.log       # 受信ログ（実行時に自動生成）
 └── README.md
@@ -221,6 +227,60 @@ chmod 664 /Users/goodsun/develop/line/users.log
 | ブラウザ直アクセスで動かない | LINE外ブラウザは `liff.isInClient()` で挙動が異なる。`liff.login()` で外部ブラウザログインに進む |
 | `users.log` が作成されない | ディレクトリの書き込み権限不足 |
 | HTTPS必須エラー | エンドポイントURLは必ずHTTPS。ローカルは cloudflared/ngrok 経由で |
+
+## Messaging API
+
+ミニアプリで取得した `userId` を使って、メッセージ送信やボット応答ができる。
+
+### 前提: Messaging APIチャネルの作成
+
+Messaging APIは**ミニアプリとは別のチャネル**が必要。**同一プロバイダ内**に作成すること（userIdはプロバイダ単位で共通なので、ミニアプリで取得したuserIdをそのままプッシュ送信に使える）。
+
+1. [LINE Developers Console](https://developers.line.biz/console/) → ミニアプリと**同じプロバイダ** → 「Messaging API」チャネルを新規作成
+2. **「チャネル基本設定」** → **チャネルシークレット** を控える → `.env` の `LINE_CHANNEL_SECRET`
+3. **「Messaging API設定」** → **チャネルアクセストークン（長期）** を発行 → `.env` の `LINE_CHANNEL_ACCESS_TOKEN`
+4. 同タブで **応答メッセージをオフ**、**Webhookをオン**（自動応答ボットを使う場合）
+
+```
+# .env（gitignore対象。実値はここに置く）
+LINE_CHANNEL_ACCESS_TOKEN=（長期アクセストークン）
+LINE_CHANNEL_SECRET=（チャネルシークレット）
+```
+
+### 1. プッシュメッセージ送信
+
+ミニアプリの結果画面の **「自分にプッシュ送信」** ボタン → `push.php`。
+送信先userIdはクライアント申告ではなく、**サーバーが検証済みIDトークンの `sub` から決定**する（なりすまし防止）。
+
+任意のuserId宛に送るコード例:
+
+```php
+require __DIR__ . '/line_api.php';
+line_push($userId, [line_text('こんにちは')]);
+```
+
+### 2. 自動応答ボット（Webhook）
+
+`webhook.php` がWebhookを受け、**署名検証**（チャネルシークレットでHMAC-SHA256）後にテキストへオウム返し、友だち追加であいさつを返す。
+
+- Console「Messaging API設定」→ Webhook URL に `https://<公開ホスト>/webhook.php` を設定 → 「検証」で疎通確認
+- 署名が一致しないリクエストは403で拒否
+
+### 3. 一斉配信（ブロードキャスト）
+
+```bash
+php broadcast.php "全員へのお知らせです"
+```
+
+### 4. リッチメニュー
+
+トーク下部のメニューを作成し、タップでミニアプリ（`https://miniapp.line.me/<LIFF_ID>`）を開く。
+画像は **2500x843**（compactサイズ）に合わせて用意する。
+
+```bash
+php richmenu.php ./menu.png
+# → richMenuId作成 → 画像アップロード → 全ユーザーのデフォルトに設定
+```
 
 ## LIFFとLINEミニアプリの関係
 
